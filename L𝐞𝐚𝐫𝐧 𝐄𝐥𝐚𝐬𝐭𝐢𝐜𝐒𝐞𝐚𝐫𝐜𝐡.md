@@ -14,7 +14,7 @@ ElasticSearch use cases:<br>
 🔹 Product search on an eCommerce website<br>
 🔹 Log analysis<br>
 🔹 Auto completer, spell checker<br>
-🔹 Business intelligence analysis
+🔹 Business intelligence analysis<br>
 🔹 Full-text search on Wikipedia<br>
 🔹 Full-text search on StackOverflow<br>
 
