@@ -16,3 +16,5 @@ ElasticSearch use cases:<br>
 🔹 Full-text search on StackOverflow<br>
 
 The core of ElasticSearch lies in the data structure and indexing. It is important to understand how ES builds the 𝐭𝐞𝐫𝐦 𝐝𝐢𝐜𝐭𝐢𝐨𝐧𝐚𝐫𝐲 using 𝐋𝐒𝐌 𝐓𝐫𝐞𝐞 (Log-Strucutured Merge Tree).
+
+** Watch this Video** : https://www.youtube.com/watch?v=NxpZyQVO0K4&ab_channel=GeorgeBridgeman
