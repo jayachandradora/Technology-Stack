@@ -1,6 +1,3 @@
-# 𝐇𝐨𝐰 𝐝𝐨 𝐰𝐞 𝐥𝐞𝐚𝐫𝐧 𝐄𝐥𝐚𝐬𝐭𝐢𝐜𝐒𝐞𝐚𝐫𝐜𝐡?
-
-
 ![image](https://user-images.githubusercontent.com/115500959/206844468-d6f4ad1b-be52-4d5f-8ac4-4ff7ea6a8db8.png)
 
 Based on the Lucene library, Elasticsearch provides search capabilities. It provides a distributed, multitenant-capable full-text search engine with an HTTP web interface and schema-free JSON documents. The diagram below shows the outline.
