@@ -339,16 +339,22 @@ public class OrderKafkaConsumer {
 
 Temporal flow for as per Temporal flow as like Storm Orchestrator 
 
+```
 Kafka consumer → triggers the appropriate workflow
 Temporal Workflows:
 
-Ingress Event Work Flow <BR>
-Product Response Work Flow <BR>
-Item Response Work flow <BR>
-Circute Breaker Work Flow <BR>
+-> Ingress Event Work Flow <BR>
+-> Product Response Work Flow <BR>
+-> Item Response Work flow <BR>
+-> Circute Breaker Work Flow <BR>
 
 Activities for each step (save, validate, mapping, posting to downstream, etc. of all above workflow related )
-Workflow Orchestrator to start the right workflow (FGEventMessageProcessingWorkflowOrchestrator) - > <BR> startIngressEventWorkFlow(), <BR> startProductResponseWorkFlow(), <BR> startItemReponseWorkflow(), <BR> startCircutBreakerWorkflow()
+Workflow Orchestrator to start the right workflow (FGEventMessageProcessingWorkflowOrchestrator) <BR>
+-> startIngressEventWorkFlow(), <BR>
+-> startProductResponseWorkFlow(), <BR>
+-> startItemReponseWorkflow(), <BR>
+-> startCircutBreakerWorkflow()
+```
 
 ---
 
