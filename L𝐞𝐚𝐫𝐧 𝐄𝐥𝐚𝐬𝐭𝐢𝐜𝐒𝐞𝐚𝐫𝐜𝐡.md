@@ -1295,3 +1295,122 @@ To connect Kafka → Logstash → Elasticsearch:
 ---
 
 
+# Amazon Order Service reasonable assumptions and give daily / monthly / yearly / total-to-date estimates
+
+Below is a **reasoned, model-based estimate**, since Amazon does *not* publicly disclose the exact storage size of order-service JSON payloads.
+I’ll walk you through reasonable assumptions and give daily / monthly / yearly / total-to-date estimates.
+
+---
+
+# ✅ **1. Key Assumptions**
+
+To estimate storage size, we must assume:
+
+### **A. Orders per day (global Amazon)**
+
+Amazon does not publish real numbers, but industry analyses suggest:
+
+* **2024 average:** ~**1.5 to 2 billion orders per year**
+* That’s roughly:
+  **4–6 million orders per day** (non-peak)
+  **20–30+ million orders per day** during Prime Day / holidays
+
+➡️ I’ll use a midpoint of **7 million orders/day average** across the year.
+
+---
+
+### **B. Size of one order JSON**
+
+An individual order service event normally contains fields like:
+
+* orderId
+* customerId
+* timestamps
+* list of items
+* pricing
+* shipping info
+* fulfillment info
+* promotions
+* taxes
+* metadata
+
+A compact JSON for a single order with 1–5 items is typically:
+
+👉 **4–8 KB per order** if stripped of images, logs, or tracking.
+I'll use **6 KB average per order**.
+
+---
+
+# ✅ **2. Storage Estimates**
+
+## **Daily**
+
+```
+7,000,000 orders/day × 6 KB ≈ 42,000,000 KB/day
+≈ 42,000 MB/day
+≈ 42 GB/day
+```
+
+👉 **≈ 40–50 GB of JSON per day**
+
+---
+
+## **Monthly**
+
+```
+42 GB/day × 30 = 1,260 GB
+≈ 1.2–1.4 TB/month
+```
+
+👉 **≈ 1.3 TB of JSON per month**
+
+---
+
+## **Yearly**
+
+```
+42 GB/day × 365 ≈ 15,330 GB
+≈ 15 TB/year
+```
+
+👉 **≈ 15–18 TB per year**
+
+---
+
+# ✅ **3. Estimate “As of Today” (2025)**
+
+Amazon started large-scale ordering around **1997**, but volumes pre-2010 were very small. Modern-scale ordering is roughly:
+
+* **2010–2015:** ~100–500 million orders/year
+* **2016–2025:** ~1–2 billion orders/year
+
+Using an average of **~15 TB/year from 2016–2025** (10 years):
+
+```
+15 TB × 10 ≈ 150 TB
+```
+
+Kick in another rough **10–15 TB** for older years (much smaller volume):
+
+👉 **Total historical order JSON estimate: ~160–180 TB**
+
+---
+
+# 📦 **Final Summary**
+
+| Period                         | Estimated Order JSON Size |
+| ------------------------------ | ------------------------- |
+| **Daily**                      | **~40–50 GB**             |
+| **Monthly**                    | **~1.2–1.4 TB**           |
+| **Yearly**                     | **~15–18 TB**             |
+| **Total to date (≈1997–2025)** | **≈160–180 TB**           |
+
+---
+
+# ⚠️ Notes
+
+* These are **structural estimates**, not confirmed Amazon numbers.
+* Real Amazon data pipelines store multiple copies (raw, enriched, protobuf, parquet), so **actual internal data footprint is far larger**.
+* This is *only* the order JSON payload—no tracking, shipments, logs, customer data, analytics tables, or data lake components included.
+
+---
