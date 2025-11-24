@@ -1,6 +1,6 @@
 
 
-# Details of Kafka SASL Mechanisms & Security Protocol
+# Kafka SASL Mechanisms & Security Protocol
 
 ---
 
