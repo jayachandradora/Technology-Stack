@@ -951,6 +951,178 @@ This shows how Elasticsearch allocates shards across nodes and how replicas ensu
 
 ---
 
+# Example of Capacity Planning 1PB data with Elastic Searcch Cluster Estimation
+
+Below is a **practical, engineering-grade capacity-planning guideline** for storing **1 PB (peta­byte)** of data in **Elasticsearch / OpenSearch**.
+There is **no single “correct” answer** because it depends on replication, shard sizing, ingestion rate, query load, retention, etc.
+But I can provide a **realistic design** used in large-scale clusters.
+
+---
+
+# 🔥 **Key Assumptions (adjustable)**
+
+To calculate something meaningful, let’s assume:
+
+### 📌 **1. Raw data = 1 PB (1,000 TB)**
+
+### 📌 **2. Replication = 1 replica**
+
+Meaning Elasticsearch will store **2 PB total** (primary + replica).
+
+### 📌 **3. Storage type: NVMe local SSD**
+
+Recommended for large clusters.
+
+### 📌 **4. Shard size target = 50–60 GB**
+
+Elasticsearch works best with **30–65 GB** shard sizes.
+
+### 📌 **5. Node size: 64–128 GB RAM**
+
+Most production clusters run data nodes with 64 or 128 GB RAM.
+
+---
+
+# 📐 **Step 1 — Storage Requirement**
+
+### Total stored = **2 PB** = 2,000 TB
+
+Target storage per node (best practice): **10–12 TB usable SSD**.
+
+Thus:
+
+```
+Nodes ≈ 2000 TB / 12 TB = 166–170 data nodes
+```
+
+👉 **Round to: ~170 data nodes**
+
+---
+
+# 📐 **Step 2 — Node Hardware Recommendation**
+
+### **Data Node Size**
+
+| Component | Recommended           |
+| --------- | --------------------- |
+| RAM       | **64–128 GB**         |
+| CPU       | **16–32 vCPU**        |
+| Storage   | **12 TB NVMe usable** |
+
+### Why not huge nodes?
+
+Elasticsearch scales **horizontally**, not vertically.
+Many smaller nodes > few large nodes.
+
+---
+
+# 📐 **Step 3 — Shard Count Calculation**
+
+For 1 PB:
+
+```
+1 PB / 60 GB per shard ≈ ~16,666 shards primary
+With replica → 33,333 total shards
+```
+
+→ Distributed across 170 nodes:
+
+```
+≈ 200 primary shards per node
+≈ 400 total per node (incl. replica)
+```
+
+This is OK.
+Elasticsearch allows **20–600 shards per node**, depending on RAM and usage.
+
+---
+
+# 📐 **Step 4 — Cluster Layout Recommendation**
+
+### **Recommended Architecture for 1 PB ES Cluster**
+
+| Node Type              | Quantity          | Purpose                        |
+| ---------------------- | ----------------- | ------------------------------ |
+| **Data nodes**         | **170**           | Store data and shards          |
+| **Master nodes**       | **3 (dedicated)** | Cluster stability              |
+| **Coordinating nodes** | **4–8**           | Handle queries / Kibana        |
+| **Ingest nodes**       | **8–16**          | Log pipelines, ETL, enrichment |
+| **ML/Transform nodes** | Optional          | Only if used                   |
+
+---
+
+# 📦 **Kubernetes / Pod Sizing**
+
+### **Pod resources per data node**
+
+```
+resources:
+  requests:
+    cpu: 16
+    memory: 64Gi
+  limits:
+    cpu: 32
+    memory: 128Gi
+```
+
+### **Expect 1 Elasticsearch pod per node**
+
+Stateful data nodes must run **one pod per physical worker** (avoids noisy neighbors, disk sharing issues).
+
+Thus you need:
+
+```
+170 Kubernetes worker nodes (data tier)
++ 5–15 worker nodes for master/ingest/coordinating pods
+```
+
+Total: **~185 worker nodes**
+
+---
+
+# 📊 Final Recommended Cluster for 1 PB Data
+
+### **1️⃣ Data Nodes**
+
+* **170 data nodes**
+* 12 TB NVMe each
+* 64–128 GB RAM
+* 16–32 vCPUs
+
+### **2️⃣ Master Nodes**
+
+* 3 dedicated
+* 4–8 vCPU, 16–32 GB RAM
+
+### **3️⃣ Coordinating Nodes**
+
+* 4–8 nodes
+* 8–16 vCPU, 32–64 GB RAM
+
+### **4️⃣ Ingest Nodes**
+
+* 8–16 nodes
+* 8–32 vCPU, 32–64 GB RAM
+
+### **5️⃣ Kubernetes Worker Nodes**
+
+* ~185 nodes total
+
+---
+
+# 📌 If you want a more accurate design…
+
+I can refine the cluster size precisely if you tell me:
+
+1. **Replication factor** (1 or 2?)
+2. **Expected daily ingest volume**
+3. **Retention period**
+4. **Query pattern** (heavy search? mostly ingestion?)
+5. **Document size**
+6. **Indexing rate (docs/sec)**
+7. **Cloud provider or on-prem?**
+
+
 ![image](https://user-images.githubusercontent.com/115500959/206844468-d6f4ad1b-be52-4d5f-8ac4-4ff7ea6a8db8.png)
 
 Based on the Lucene library, Elasticsearch provides search capabilities. It provides a distributed, multitenant-capable full-text search engine with an HTTP web interface and schema-free JSON documents. The diagram below shows the outline.
@@ -971,3 +1143,155 @@ ElasticSearch use cases:<br>
 The core of ElasticSearch lies in the data structure and indexing. It is important to understand how ES builds the 𝐭𝐞𝐫𝐦 𝐝𝐢𝐜𝐭𝐢𝐨𝐧𝐚𝐫𝐲 using 𝐋𝐒𝐌 𝐓𝐫𝐞𝐞 (Log-Strucutured Merge Tree).
 
 **Watch this Video** : https://www.youtube.com/watch?v=NxpZyQVO0K4&ab_channel=GeorgeBridgeman
+
+---
+
+# ✅ **Overall  Kafka  →  Logstash Architecture**
+
+```
+Kafka  →  Logstash  →  Elasticsearch
+```
+
+* **Producers** send JSON messages to a Kafka topic.
+* **Logstash** reads (polls) JSON messages from that Kafka topic.
+* Logstash processes the data (optional filtering).
+* Logstash sends the data to **Elasticsearch nodes**.
+* You can then visualize the data using **Kibana**.
+
+---
+
+# ✓ **1. Install the required components**
+
+You need:
+
+* **Kafka**
+* **Logstash**
+* **Elasticsearch**
+* **Kibana** (optional visualization)
+
+All must be reachable over the network.
+
+---
+
+# ✓ **2. Logstash Kafka Input Plugin**
+
+Logstash uses the **kafka input plugin**.
+
+Add these lines in your Logstash pipeline configuration:
+
+### **logstash.conf**
+
+```conf
+input {
+  kafka {
+    bootstrap_servers => "localhost:9092"
+    topics => ["my-topic"]
+    group_id => "logstash-group"
+    auto_offset_reset => "earliest"
+    codec => "json"
+  }
+}
+
+filter {
+  # optional filters, like json parsing or field renaming
+  # json { source => "message" }
+}
+
+output {
+  elasticsearch {
+    hosts => ["http://localhost:9200"]
+    index => "kafka-logs-%{+YYYY.MM.dd}"
+  }
+
+  stdout { codec => rubydebug }
+}
+```
+
+---
+
+# ✓ **3. Explanation of Key Settings**
+
+### **Kafka block:**
+
+| Setting             | Description                                    |
+| ------------------- | ---------------------------------------------- |
+| `bootstrap_servers` | Kafka broker location                          |
+| `topics`            | Kafka topic from which Logstash will pull JSON |
+| `group_id`          | Consumer group name                            |
+| `auto_offset_reset` | Start from earliest or latest                  |
+| `codec => json`     | Automatically parses incoming JSON messages    |
+
+---
+
+### **Elasticsearch block:**
+
+| Setting | Description                          |
+| ------- | ------------------------------------ |
+| `hosts` | One or more Elasticsearch nodes      |
+| `index` | Index name where data will be stored |
+
+You can give multiple nodes:
+
+```conf
+hosts => ["http://es-node1:9200", "http://es-node2:9200"]
+```
+
+---
+
+# ✓ **4. Start Logstash with this pipeline**
+
+If your pipeline file is `/etc/logstash/conf.d/kafka.conf`:
+
+```sh
+sudo systemctl start logstash
+```
+
+Or run manually for testing:
+
+```sh
+/usr/share/logstash/bin/logstash -f logstash.conf
+```
+
+---
+
+# ✓ **5. Verify Elasticsearch Received Data**
+
+Check the indices:
+
+```sh
+curl -X GET "localhost:9200/_cat/indices?v"
+```
+
+Or search for documents:
+
+```sh
+curl -X GET "localhost:9200/kafka-logs-*/_search?pretty"
+```
+
+---
+
+# ✓ **6. (Optional) Visualize in Kibana**
+
+1. Open Kibana → *Stack Management* → *Index Patterns*
+2. Create an index pattern:
+
+   ```
+   kafka-logs-*
+   ```
+3. Start exploring documents in **Discover**.
+
+---
+
+# 🎯 **Summary**
+
+To connect Kafka → Logstash → Elasticsearch:
+
+1. Create a Logstash pipeline using the **kafka input plugin**.
+2. Parse JSON (using codec json).
+3. Output to Elasticsearch using its HTTP API.
+4. Verify data ingestion in Elasticsearch.
+5. Visualize via Kibana.
+
+---
+
+
