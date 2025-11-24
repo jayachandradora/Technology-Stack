@@ -1,5 +1,6 @@
 
-# explanation of the **SASL mechanisms for Kafka producers**, including **OAUTHBEARER**, **PLAIN**, **SCRAM**, **GSSAPI (Kerberos)**, **SASL_JAAS_CONFIG**, and **sasl.login.callback.handler.class**.
+
+# Details of Kafka SASL Mechanisms & Security Protocol
 
 ---
 
